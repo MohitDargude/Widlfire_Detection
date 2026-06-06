@@ -1,0 +1,476 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildfire Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --yellow: #ffc107;
+            --orange: #ff6b35;
+            --pink: #d81159;
+            --purple: #4b0082;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            padding: 2rem 1rem;
+        }
+
+        .main-title {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--yellow);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: var(--orange);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            height: 480px;
+            margin: 20px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+
+        .result-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .confidence {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            z-index: 1000;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn-primary {
+            background: var(--yellow);
+            border: none;
+            color: var(--purple);
+        }
+
+        .btn-primary:hover {
+            background: var(--orange);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-danger {
+            background: var(--pink);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #b30e4a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 12px;
+            background: rgba(255,255,255,0.9);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            border-color: var(--yellow);
+            background: white;
+        }
+
+        .alert {
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--yellow);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--yellow);
+            margin-bottom: 1rem;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .detecting {
+            animation: pulse 2s infinite;
+        }
+
+        /* Loading animation */
+        .loader {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--yellow);
+            border-radius: 50%;
+            border-top-color: transparent;
+            margin: 20px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .camera-container {
+                height: 360px;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title animate__animated animate__fadeInDown">
+            <i class="fas fa-fire"></i> Wildfire Detection System
+        </h1>
+        
+        <!-- Live Camera Section -->
+        <div class="card animate__animated animate__fadeInUp">
+            <div class="card-header">
+                <h3><i class="fas fa-video"></i> Live Camera Detection</h3>
+            </div>
+            <div class="card-body">
+                <div class="camera-container">
+                    <video id="videoElement" autoplay></video>
+                    <div class="result-overlay" id="resultOverlay">
+                        <i class="fas fa-search"></i> Initializing...
+                    </div>
+                    <div class="confidence" id="confidenceOverlay">
+                        <i class="fas fa-percentage"></i> Confidence: --
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button id="startCamera" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Camera
+                    </button>
+                    <button id="stopCamera" class="btn btn-danger" disabled>
+                        <i class="fas fa-stop"></i> Stop Camera
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Upload Section -->
+        <div class="card animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+            <div class="card-header">
+                <h3><i class="fas fa-upload"></i> Image Upload Detection</h3>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" class="mb-3">
+                    <div class="upload-area" id="dropZone">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h4>Drag & Drop or Click to Upload</h4>
+                        <p class="text-muted">Supported formats: JPG, PNG, GIF</p>
+                        <input type="file" class="form-control" id="image" accept="image/*" hidden>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Detect Wildfire
+                        </button>
+                    </div>
+                </form>
+                <div class="loader" id="loader"></div>
+                <div id="result" class="alert" style="display: none;"></div>
+                <div id="imagePreview" class="text-center"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Live Camera Implementation
+        let video = document.getElementById('videoElement');
+        let stream = null;
+        let isDetecting = false;
+        let detectionInterval = null;
+
+        const startButton = document.getElementById('startCamera');
+        const stopButton = document.getElementById('stopCamera');
+        const resultOverlay = document.getElementById('resultOverlay');
+        const confidenceOverlay = document.getElementById('confidenceOverlay');
+
+        startButton.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                startDetection();
+                resultOverlay.classList.add('detecting');
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Error accessing camera. Please make sure you have granted camera permissions.');
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                stopDetection();
+                resultOverlay.classList.remove('detecting');
+            }
+        });
+
+        function startDetection() {
+            isDetecting = true;
+            detectionInterval = setInterval(detectFrame, 1000);
+        }
+
+        function stopDetection() {
+            isDetecting = false;
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+        }
+
+        async function detectFrame() {
+            if (!isDetecting) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            try {
+                const response = await fetch('/detect_live', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: canvas.toDataURL('image/jpeg')
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    console.error('Detection error:', data.error);
+                    return;
+                }
+
+                resultOverlay.innerHTML = `<i class="fas ${data.result === "Wildfire Detected" ? 'fa-fire' : 'fa-check'}"></i> ${data.result}`;
+                confidenceOverlay.innerHTML = `<i class="fas fa-percentage"></i> Confidence: ${data.confidence}`;
+                
+                resultOverlay.style.backgroundColor = data.result === "Wildfire Detected" 
+                    ? 'rgba(216, 17, 89, 0.9)' 
+                    : 'rgba(0, 0, 0, 0.8)';
+            } catch (error) {
+                console.error('Error during detection:', error);
+            }
+        }
+
+        // Drag and Drop Implementation
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('image');
+        const imagePreview = document.getElementById('imagePreview');
+        const loader = document.getElementById('loader');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ffc107';
+            dropZone.style.backgroundColor = 'rgba(255,255,255,0.1)';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'rgba(255,255,255,0.3)';
+            dropZone.style.backgroundColor = 'transparent';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'rgba(255,255,255,0.3)';
+            dropZone.style.backgroundColor = 'transparent';
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.innerHTML = `
+                    <img src="${e.target.result}" class="preview-image animate__animated animate__fadeIn" alt="Preview">
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Image Upload Implementation
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                loader.style.display = 'block';
+                resultDiv.style.display = 'none';
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    resultDiv.textContent = `Error: ${data.error}`;
+                    resultDiv.className = 'alert alert-danger animate__animated animate__fadeIn';
+                } else {
+                    resultDiv.innerHTML = `
+                        <i class="fas ${data.result === "Wildfire Detected" ? 'fa-fire' : 'fa-check'}"></i>
+                        Result: ${data.result} (Confidence: ${data.confidence})
+                    `;
+                    resultDiv.className = `alert ${data.result === "Wildfire Detected" ? 'alert-danger' : 'alert-success'} animate__animated animate__fadeIn`;
+                }
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'alert alert-danger animate__animated animate__fadeIn';
+            } finally {
+                loader.style.display = 'none';
+                resultDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
